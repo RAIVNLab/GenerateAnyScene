@@ -1,0 +1,16 @@
+{
+    "3D shape attributes":[
+        "Has Planarity",
+        "No Planarity",
+        "Has Cylindrical",
+        "Has Roughness",
+        "Point/Line Contact",
+        "Multiple sContacts",
+        "Mainly Empty",
+        "Multiple Pieces",
+        "Has Hole",
+        "Thin Structures",
+        "Mirror Symmetry",
+        "Cubic Aspect Ratio"
+    ]
+}
