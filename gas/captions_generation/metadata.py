@@ -7,7 +7,6 @@ from itertools import combinations, permutations
 import networkx as nx
 import pandas as pd
 
-from ..metadata import MetaData
 
 
 def has_cycle(graph):
@@ -173,7 +172,7 @@ class SGTemplateStore:
 		return False
 
 
-class Text2VisionMetaData(MetaData):
+class Text2VisionMetaData():
 	def __init__(self, path_to_metadata, path_to_sg_template=None):
 		self.attributes = json.load(
 			open(os.path.join(path_to_metadata, "attributes.json"))

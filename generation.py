@@ -5,8 +5,8 @@ import random
 import argparse
 import multiprocessing as mp
 from tqdm import tqdm
-from gas.text2vision.prompt_generator import Text2ImagePromptGenerator, Text2VideoPromptGenerator, Text2ThreeDScenePromptGenerator, Text2ThreeDObjectPromptGenerator
-from gas.text2vision.metadata import Text2ImageMetaData, Text2VideoMetaData, Text2ThreeDMetaData
+from gas.captions_generation.prompt_generator import Text2ImagePromptGenerator, Text2VideoPromptGenerator, Text2ThreeDScenePromptGenerator, Text2ThreeDObjectPromptGenerator
+from gas.captions_generation.metadata import Text2ImageMetaData, Text2VideoMetaData, Text2ThreeDMetaData
 
 
 def parse_arguments():
@@ -52,7 +52,7 @@ def generate_prompt(generator, complexity, num_global_attributes):
     return generator.generate(sg)
 
 
-def generate_batch(batch_idx, complexities, scene_attributes, prompts_per_attribute, metadata, seed, output_dir):
+def generate_batch(batch_idx, complexities, scene_attributes, prompts_per_attribute, metadata, seed, output_dir, modality_type):
     """
     Generate a batch of prompts and save them to a file.
 
@@ -66,7 +66,14 @@ def generate_batch(batch_idx, complexities, scene_attributes, prompts_per_attrib
         output_dir (str): Directory to save the output files.
     """
     prompts_list = []
-    generator = Text2ImagePromptGenerator(metadata=metadata, seed=seed)
+    if modality_type == "text2image":
+        generator = Text2ImagePromptGenerator(metadata=metadata, seed=seed)
+    elif modality_type == "text2video":
+        generator = Text2VideoPromptGenerator(metadata=metadata, seed=seed)
+    elif modality_type == "text2threed":
+        generator = Text2ThreeDScenePromptGenerator(metadata=metadata, seed=seed)
+    elif modality_type == "text2threedobject":
+        generator = Text2ThreeDObjectPromptGenerator(metadata=metadata, seed=seed)
 
     # Generate prompts for each complexity and attribute count
     for complexity in tqdm(complexities, desc=f"Batch {batch_idx} - Complexity"):
@@ -89,12 +96,33 @@ def main():
     args = parse_arguments()
 
     # Setup metadata and other parameters
-    metadata = Text2ImageMetaData(path_to_metadata=args.metadata_path)
+    if args.modality_type == "text2image": 
+        metadata = Text2ImageMetaData(path_to_metadata=args.metadata_path)
+    elif args.modality_type == "text2video":
+        metadata = Text2VideoMetaData(path_to_metadata=args.metadata_path)
+    elif args.modality_type == "text2threed":
+        metadata = Text2ThreeDMetaData(path_to_metadata=args.metadata_path)
+        
     complexities = range(args.min_complexity, args.max_complexity + 1)
     scene_attributes = range(args.min_attributes, args.max_attributes + 1)
     prompts_per_file = args.total_prompts // args.num_files
     prompts_per_complexity = prompts_per_file // len(complexities)
     prompts_per_attribute = prompts_per_complexity // len(scene_attributes)
+
+    # print out the parameters
+    print("##############################")
+    print("Configuration:")
+    print(f"Modality type: {args.modality_type}")
+    print(f"Metadata path: {args.metadata_path}")
+    print(f"Output directory: {args.output_dir}")
+    print(f"Total prompts: {args.total_prompts}")
+    print(f"Number of files: {args.num_files}")
+    print(f"Complexity range: {args.min_complexity} - {args.max_complexity}")
+    print(f"Scene attributes range: {args.min_attributes} - {args.max_attributes}")
+    print(f"Numbers of processors: {prompts_per_file}")
+    print("##############################")
+
+    
 
     # Seed for reproducibility
     if args.num_files > 1:
@@ -102,14 +130,10 @@ def main():
     else:
         seeds = [42]  # Default seed for single process generation
 
-    print(f"Generating {args.total_prompts} prompts across {args.num_files} file(s)")
-    print(f"Complexities: {list(complexities)}")
-    print(f"Scene Attributes: {list(scene_attributes)}")
-
     # Use multiprocessing to generate batches in parallel
     with mp.Pool(processes=args.num_files) as pool:
         pool.starmap(generate_batch, [
-            (batch_idx, complexities, scene_attributes, prompts_per_attribute, metadata, seeds[batch_idx], args.output_dir)
+            (batch_idx, complexities, scene_attributes, prompts_per_attribute, metadata, seeds[batch_idx], args.output_dir, args.modality_type)
             for batch_idx in range(args.num_files)
         ])
 

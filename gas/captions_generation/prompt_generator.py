@@ -8,7 +8,6 @@ import numpy as np
 from .metadata import Text2ImageMetaData, Text2ThreeDMetaData, Text2VideoMetaData, Text2VisionMetaData
 from .scene_graph import get_sg_desc
 from .utils import make_and_description
-from ..base import TaskGenerator
 
 
 def get_element_num_dict(graph):
@@ -106,7 +105,7 @@ def get_prompt(global_attribute_desc, sg_desc, generate_type):
 		return f"Create a {global_attribute_desc} {generate_type}: {sg_desc}"
 
 
-class Text2VisionPromptGenerator(TaskGenerator):
+class Text2VisionPromptGenerator():
 	generate_type = "vision"
 	metadata: Text2VisionMetaData
 

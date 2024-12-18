@@ -257,7 +257,7 @@ class ProgrammaticDSGTIFAScore(Metric):
         return tnt / cnt if cnt > 0 else 0.0
         
     def compute(self, image: Image.Image, gen_data: dict):
-        from ...text2vision.prompt_generator import convert_json_to_sg
+        from ...captions_generation.prompt_generator import convert_json_to_sg
         # the scene graph in gen_data is json format, we need to convert it to nx.DiGraph format here
         scene_graph = convert_json_to_sg(gen_data['scene_graph'])
         dsg_questions = self._get_dsg_questions(scene_graph)
