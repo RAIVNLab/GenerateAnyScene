@@ -15,7 +15,35 @@
 <sup>*</sup>Equal Contribution -->
 <!-- --- -->
 
-## Abstract
+
+## Installation and Usage
+### For Captions Generation
+You can easily download the repo and set up the environments via:
+```
+git clone https://github.com/JieyuZ2/TaskMeAnything.git
+cd ./TaskMeAnything
+
+pip install -r requirements.txt
+```
+After downloading the repo, you can generate captions using the following command:
+```
+python generation.py \
+  --metadata_path ./metadata \
+  --output_dir ./output \
+  --total_prompts 10 \
+  --num_files 2 \
+  --min_complexity 4 \
+  --max_complexity 7 \
+  --min_attributes 1 \
+  --max_attributes 4 \
+  --modality_type text2image
+```
+
+### For Model Inference and Evaluation
+Stay tuned!
+
+
+## What is Generate Any Scene
 
 Generative models have shown remarkable capabilities in producing images, videos, and 3D assets from textual descriptions. However, current benchmarks predominantly focus on real-world images paired with captions. To address this limitation, we introduce **Generate Any Scene**, a novel framework that:
 
@@ -125,11 +153,11 @@ If you find **Generate Any Scene** helpful in your work, please cite:
 
 ```bibtex
 @misc{gao2024generatesceneevaluatingimproving,
-  title={Generate Any Scene: Evaluating and Improving Text-to-Vision Generation with Scene Graph Programming}, 
-  author={Ziqi Gao and Weikai Huang and Jieyu Zhang and Aniruddha Kembhavi and Ranjay Krishna},
-  year={2024},
-  eprint={2412.08221},
-  archivePrefix={arXiv},
-  primaryClass={cs.CV},
-  url={https://arxiv.org/abs/2412.08221}
+      title={Generate Any Scene: Evaluating and Improving Text-to-Vision Generation with Scene Graph Programming}, 
+      author={Ziqi Gao and Weikai Huang and Jieyu Zhang and Aniruddha Kembhavi and Ranjay Krishna},
+      year={2024},
+      eprint={2412.08221},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2412.08221}, 
 }
