@@ -1,9 +1,53 @@
 from collections import defaultdict
+from itertools import combinations
 
 import inflect
 import networkx as nx
 
 from .utils import make_and_description
+
+
+def find_isomorphisms(graph1, graph2):
+	# find whether a scene_graph is subgraph of the other scene_graph or not.
+	def node_match(n1, n2):
+		return n1["type"] == n2["type"]
+
+	matching_subgraphs = []
+	for sub_nodes in combinations(graph2.nodes(), len(graph1.nodes())):
+		subG = graph2.subgraph(sub_nodes)
+
+		GM = nx.algorithms.isomorphism.DiGraphMatcher(
+			subG, graph1, node_match=node_match
+		)
+		if GM.is_isomorphic():
+			matching = {v: k for k, v in GM.mapping.items()}
+			matching_subgraphs.append(matching)
+
+	return matching_subgraphs
+
+def add_seed_graph_to_template_graph(
+		seed_graph: nx.DiGraph, template_graph: nx.DiGraph
+):
+	if seed_graph is not None:
+		conditioned_templates = []
+		match_subgraphs = find_isomorphisms(seed_graph, template_graph)
+		for match_subgraph in match_subgraphs:
+			scene_graph = template_graph.copy()
+			for seed_node, template_node in match_subgraph.items():
+				scene_graph.nodes[template_node]["value"] = seed_graph.nodes[seed_node]["value"]
+				for seed_neighbor in seed_graph[seed_node]:
+					if (
+							seed_graph.nodes[seed_neighbor]["type"] == "object_node"
+							and seed_neighbor in match_subgraph
+					):
+						template_neighbor = match_subgraph[seed_neighbor]
+						if scene_graph.has_edge(template_node, template_neighbor):
+							scene_graph.edges[template_node, template_neighbor]["value"] \
+								= seed_graph.edges[seed_node, seed_neighbor]["value"]
+			conditioned_templates.append(scene_graph)
+		return conditioned_templates
+	else:
+		return [template_graph]
 
 
 def label_repeated_objects_in_sg(graph: nx.DiGraph):
@@ -117,6 +161,6 @@ def get_sg_desc(scene_graph):
 			templates.append(attr_obj + " " + relations_desc)
 		else:
 			if 'mentioned' not in scene_graph.nodes[node]:
-				templates.append("there is " + attr_obj)
+				templates.append(attr_obj)
 
-	return "; ".join(templates) + '.'
+	return "; ".join(templates)

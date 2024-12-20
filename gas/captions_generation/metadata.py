@@ -8,6 +8,35 @@ import networkx as nx
 import pandas as pd
 
 
+# this function takes in a term in metadata and normalized it by removing all the '_' '|' in the metadata
+def normalized_term(term):
+	return term.replace("_", " ").replace("|", " ")
+
+def sort_scene_attributes(scene_attributes):
+	right_order = [
+		"weather", "location", "genre", "artist", "painting style", "technique",
+		"lighting", "size", "view", "depth of focus", "camera model", "camera gear",
+		"camera movement", "focal length", "ISO", "aperture", "video editing style",
+		"time span", "3D shape attribute"
+	]
+	
+	# Create a list to store keys in the desired order
+	sorted_keys = []
+	
+	# Add keys that are in right_order and exist in scene_attributes
+	for key in right_order:
+		if key in scene_attributes:
+			sorted_keys.append(key)
+	
+	# Add keys that are not in right_order
+	for key in scene_attributes:
+		if key not in sorted_keys:
+			sorted_keys.append(key)
+	
+	# Create a new dictionary with keys in sorted order
+	sorted_scene_attributes = {key: scene_attributes[key] for key in sorted_keys}
+	
+	return sorted_scene_attributes
 
 def has_cycle(graph):
 	try:
@@ -16,14 +45,12 @@ def has_cycle(graph):
 	except:
 		return False
 
-
 def combinations_with_replacement_counts(n, r):
 	size = n + r - 1
 	for indices in combinations(range(size), n - 1):
 		starts = [0] + [index + 1 for index in indices]
 		stops = indices + (size,)
 		yield tuple(map(operator.sub, stops, starts))
-
 
 def _enumerate_template_graphs(complexity, graph_store):
 	cnt = 0
@@ -107,7 +134,6 @@ def _enumerate_template_graphs(complexity, graph_store):
 		f"finished enumerate scene graph templates, total number of templates: {cnt}"
 	)
 
-
 class SGTemplateStore:
 	def __init__(self, complexity):
 		self.graph_store = []
@@ -174,45 +200,90 @@ class SGTemplateStore:
 
 class Text2VisionMetaData():
 	def __init__(self, path_to_metadata, path_to_sg_template=None):
+		# load basic data
 		self.attributes = json.load(
 			open(os.path.join(path_to_metadata, "attributes.json"))
 		)
 		self.objects = json.load(
-			open(os.path.join(path_to_metadata, "objects_list.json"))
+			open(os.path.join(path_to_metadata, "objects.json"))
 		)
 		self.relations = json.load(
 			open(os.path.join(path_to_metadata, "relations.json"))
 		)
+		self.scene_attributes = json.load(
+			open(os.path.join(path_to_metadata, "scene_attributes.json"))
+		)
+		# set sg_template_path
 		self.path_to_sg_template = path_to_sg_template
 		self.sg_template_store_dict = {}
 
-	def sample_scene_attribute(self, rng, n=1):
-		print(self.scene_attributes)
-		assert n <= len(self.scene_attributes), f"n should be less than the total types of scene attributes: {len(self.scene_attributes)}"
+	def get_object_type(self, object_value):
+		if object_value not in self.objects_category:
+			raise ValueError(f"Object value {object_value} not found in metadata")
+		else:
+			return self.objects_category[object_value]
+
+	def get_available_elements(self, element_type):
+		if element_type == "object":
+			return self.objects
+		elif element_type == "attribute":
+			return self.attributes
+		elif element_type == "relation":
+			return self.relations
+
+
+	# Implement allowed_topic later
+	def sample_scene_attribute(self, rng, n, allowed_scene_attributes):
+
 		scene_attributes = {}
-		scene_attribute_types = rng.choice(list(self.scene_attributes.keys()), n, replace=False)
-		for scene_attribute_type in scene_attribute_types:
-			attributes = self.scene_attributes[scene_attribute_type]
-			if isinstance(attributes, list):
-				scene_attributes[str(scene_attribute_type)] = str(rng.choice(attributes))
-			elif isinstance(attributes, dict):
-				scene_attribute_sub_type = rng.choice(list(attributes.keys()))
-				scene_attributes[str(scene_attribute_type)] = str(rng.choice(attributes[scene_attribute_sub_type]))
-			else:
-				raise ValueError("Invalid scene attribute type")
-		return scene_attributes
+		available_scene_attributes = []
+		
+		for attr_type in self.scene_attributes:
+			if attr_type in allowed_scene_attributes:
+				# recompute, first compute the 
+				if allowed_scene_attributes[attr_type] == "all":
+					# allow all the subtyle in this attr tyle
+					for sub_type in self.scene_attributes[attr_type]:
+						available_scene_attributes.append((attr_type, sub_type))
+				else:
+					# only allow the subtype in the allowed_scene_attributes
+					for allowed_sub_type in allowed_scene_attributes[attr_type]:
+						available_scene_attributes.append((attr_type, allowed_sub_type))
+	  	
+		assert n <= len(available_scene_attributes), f"n should be less than the number of scene attributes: {len(available_scene_attributes)}"
+		
+
+		scene_attribute_selections = rng.choice(available_scene_attributes, n, replace=False)
+		for scene_attribute_selection in scene_attribute_selections:
+			scene_attribute_type = str(scene_attribute_selection[0])
+			scene_attribute_sub_type = str(scene_attribute_selection[1])
+			attributes = self.scene_attributes[scene_attribute_type][scene_attribute_sub_type]
+			# TODO: take the intersection of allow_attribute and allowed scene attributes
+			scene_attributes[scene_attribute_sub_type] = str(rng.choice(attributes))
+		return sort_scene_attributes(scene_attributes)
 
 	def sample_metadata(self, rng, element_type):
 		if element_type == "object":
 			return str(rng.choice(list(self.objects)))
+
 		elif element_type == "attribute":
-			attr_type = rng.choice(list(self.attributes.keys()))
-			attr_value = str(rng.choice(self.attributes[attr_type]))
+			available_attributes = self.attributes
+			available_attributes_list = []
+			for type, value_list in available_attributes.items():
+				for value in value_list:
+					available_attributes_list.append(f"{type}|{value}")
+			attr_type, attr_value = rng.choice(available_attributes_list).split("|")
 			return attr_type, attr_value
+
 		elif element_type == "relation":
-			rel_type = rng.choice(list(self.relations.keys()))
-			rel_val = str(rng.choice(self.relations[rel_type]))
+			available_relations = self.relations
+			available_relations_list = []
+			for type, value_list in available_relations.items():
+				for value in value_list:
+					available_relations_list.append(f"{type}|{value}")
+			rel_type, rel_val = rng.choice(available_relations_list).split("|")
 			return rel_type, rel_val
+
 		else:
 			raise ValueError("Invalid type")
 
@@ -238,60 +309,12 @@ class Text2VisionMetaData():
 class Text2ImageMetaData(Text2VisionMetaData):
 	def __init__(self, path_to_metadata, path_to_sg_template=None):
 		super().__init__(path_to_metadata, path_to_sg_template)
-		self.scene_attributes = json.load(
-			open(os.path.join(path_to_metadata, "image_attributes.json"))
-		)
 
 
 class Text2VideoMetaData(Text2VisionMetaData):
 	def __init__(self, path_to_metadata, path_to_sg_template=None):
 		super().__init__(path_to_metadata, path_to_sg_template)
-		self.scene_attributes = {}
-		# video can both use scene attributes from image and video
-		self.scene_attributes['video_unique'] = json.load(
-			open(os.path.join(path_to_metadata, "video_scene_attributes.json"))
-		)
-		self.scene_attributes['image_and_video'] = json.load(
-			open(os.path.join(path_to_metadata, "image_scene_attributes.json"))
-		)
-	def sample_scene_attribute(self, rng, n=1):
-		is_video_unique_attribute = str(rng.choice(list(self.scene_attributes.keys())))
-		scene_attributes = {}
-		scene_attribute_types = rng.choice(list(self.scene_attributes[is_video_unique_attribute].keys()), n, replace=False)
-		for scene_attribute_type in scene_attribute_types:
-			attributes = self.scene_attributes[is_video_unique_attribute][scene_attribute_type]
-			if isinstance(attributes, list):
-				scene_attributes[str(scene_attribute_type)] = str(rng.choice(attributes))
-			elif isinstance(attributes, dict):
-				scene_attribute_sub_type = rng.choice(list(attributes.keys()))
-				scene_attributes[str(scene_attribute_type)] = str(rng.choice(attributes[scene_attribute_sub_type]))
-			else:
-				raise ValueError("Invalid scene attribute type")
-		return scene_attributes
-
 
 class Text2ThreeDMetaData(Text2VisionMetaData):
 	def __init__(self, path_to_metadata, path_to_sg_template=None):
 		super().__init__(path_to_metadata, path_to_sg_template)
-		self.scene_attributes = {}
-		# threed can both use scene attributes from image and threed
-		self.scene_attributes['threed_unique'] = json.load(
-			open(os.path.join(path_to_metadata, "threed_scene_attributes.json"))
-		)
-		self.scene_attributes['image_and_threed'] = json.load(
-			open(os.path.join(path_to_metadata, "image_scene_attributes.json"))
-		)
-	def sample_scene_attribute(self, rng, n=1):
-		is_threed_unique_attribute = str(rng.choice(list(self.scene_attributes.keys())))
-		scene_attributes = {}
-		scene_attribute_types = rng.choice(list(self.scene_attributes[is_threed_unique_attribute].keys()), n, replace=False)
-		for scene_attribute_type in scene_attribute_types:
-			attributes = self.scene_attributes[is_threed_unique_attribute][scene_attribute_type]
-			if isinstance(attributes, list):
-				scene_attributes[str(scene_attribute_type)] = str(rng.choice(attributes))
-			elif isinstance(attributes, dict):
-				scene_attribute_sub_type = rng.choice(list(attributes.keys()))
-				scene_attributes[str(scene_attribute_type)] = str(rng.choice(attributes[scene_attribute_sub_type]))
-			else:
-				raise ValueError("Invalid scene attribute type")
-		return scene_attributes
