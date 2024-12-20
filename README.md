@@ -30,8 +30,8 @@ After downloading the repo, you can generate captions using the following comman
 python generation.py \
   --metadata_path ./metadata \
   --output_dir ./output \
-  --total_prompts 10 \
-  --num_files 2 \
+  --total_prompts 1000 \
+  --num_files 1 \
   --min_complexity 4 \
   --max_complexity 7 \
   --min_attributes 1 \

@@ -110,7 +110,9 @@ class Text2VisionPromptGenerator():
 	metadata: Text2VisionMetaData
 
 	def __init__(self, metadata: Text2VisionMetaData, seed=42):
-		super().__init__(metadata, seed=seed)
+		self.metadata = metadata
+		self.seed = seed
+		self.rng = np.random.default_rng(seed=seed)
 
 	def _task_plan_to_str(self, task_plan):
 		return get_sg_desc(task_plan["scene_graph"])
