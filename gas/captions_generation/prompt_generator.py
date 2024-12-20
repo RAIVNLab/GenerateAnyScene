@@ -90,19 +90,19 @@ def add_seed_graph_to_template_graph(
 		return [template_graph]
 
 
-def get_global_attribute_desc(global_attributes):
-	global_attributes = [
+def get_scene_attribute_desc(scene_attributes):
+	scene_attributes = [
 		f"{v}"
-		for _, v in global_attributes.items()
+		for _, v in scene_attributes.items()
 	]
-	return make_and_description(global_attributes)
+	return make_and_description(scene_attributes)
 
 
-def get_prompt(global_attribute_desc, sg_desc, generate_type):
-	if global_attribute_desc == "":
+def get_prompt(scene_attribute_desc, sg_desc, generate_type):
+	if scene_attribute_desc == "":
 		return f"Create a {generate_type}: {sg_desc}"
 	else:
-		return f"Create a {global_attribute_desc} {generate_type}: {sg_desc}"
+		return f"Create a {scene_attribute_desc} {generate_type}: {sg_desc}"
 
 
 class Text2VisionPromptGenerator():
@@ -166,13 +166,13 @@ class Text2VisionPromptGenerator():
 		scene_graph = self._complete_sg(conditioned_template)
 		return scene_graph
 
-	def _sample_global_attributes(self, number_of_global_attributes):
-		return self.metadata.sample_global_attribute(self.rng, number_of_global_attributes)
+	def _sample_scene_attributes(self, number_of_scene_attributes):
+		return self.metadata.sample_scene_attribute(self.rng, number_of_scene_attributes)
 
 	def sample_task_plans(
 			self,
 			complexity=5,
-			number_of_global_attributes=1,
+			number_of_scene_attributes=1,
 			sample_numbers=100,
 			time_limit=60,
 			seed_graph: nx.DiGraph = None,
@@ -209,11 +209,11 @@ class Text2VisionPromptGenerator():
 				print("Time limit: 60s exceeded. Exiting the sampling process.")
 				break
 			scene_graph = self._sample_scene_graph(complexity, seed_graph, seed_graph_element_num_dict, element_num_dict)
-			global_attributes = self._sample_global_attributes(number_of_global_attributes)
+			scene_attributes = self._sample_scene_attributes(number_of_scene_attributes)
 			scene_graph_str = convert_sg_to_json(scene_graph)
 			task_plans.append(
 				{
-					"global_attributes": global_attributes,
+					"scene_attributes": scene_attributes,
 					"scene_graph"      : scene_graph_str,
 				}
 			)
@@ -223,8 +223,8 @@ class Text2VisionPromptGenerator():
 	def _generate_task(self, task_plan):
 		scene_graph = convert_json_to_sg(task_plan["scene_graph"])
 		sg_desc = get_sg_desc(scene_graph)
-		global_attribute_desc = get_global_attribute_desc(task_plan["global_attributes"])
-		prompt = get_prompt(global_attribute_desc, sg_desc, self.generate_type)
+		scene_attribute_desc = get_scene_attribute_desc(task_plan["scene_attributes"])
+		prompt = get_prompt(scene_attribute_desc, sg_desc, self.generate_type)
 		return prompt
 
 	def generate(self, task_plan, seed=None):
@@ -234,7 +234,7 @@ class Text2VisionPromptGenerator():
 
 		task = {
 			"prompt"           : prompt,
-			"global_attributes": task_plan["global_attributes"],
+			"scene_attributes": task_plan["scene_attributes"],
 			"scene_graph"      : task_plan["scene_graph"],
 		}
 		return task

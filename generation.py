@@ -3,7 +3,7 @@ import random
 import argparse
 import multiprocessing as mp
 from tqdm import tqdm
-from gas.captions_generation.prompt_generator import Text2ImagePromptGenerator, Text2VideoPromptGenerator, Text2ThreeDScenePromptGenerator, Text2ThreeDObjectPromptGenerator
+from gas.captions_generation.prompt_generator import Text2ImagePromptGenerator, Text2VideoPromptGenerator, Text2ThreeDPromptGenerator
 from gas.captions_generation.metadata import Text2ImageMetaData, Text2VideoMetaData, Text2ThreeDMetaData
 
 def parse_arguments():
@@ -29,8 +29,8 @@ def create_metadata(modality_type, metadata_path):
     else:
         raise ValueError(f"Unsupported modality type: {modality_type}")
 
-def generate_prompt(generator, complexity, num_global_attributes):
-    task_plans = generator.sample_task_plans(number_of_global_attributes=num_global_attributes, complexity=complexity, sample_numbers=1)
+def generate_prompt(generator, complexity, num_scene_attributes):
+    task_plans = generator.sample_task_plans(number_of_scene_attributes=num_scene_attributes, complexity=complexity, sample_numbers=1)
     sg = task_plans[0]
     return generator.generate(sg)
 
@@ -39,6 +39,10 @@ def generate_batch(batch_idx, complexities, scene_attributes, prompts_per_attrib
     metadata = create_metadata(modality_type, metadata_path)
     if modality_type == "text2image":
         generator = Text2ImagePromptGenerator(metadata=metadata, seed=seed)
+    elif modality_type == "text2video":
+        generator = Text2VideoPromptGenerator(metadata=metadata, seed=seed)
+    elif modality_type == "text2threed":
+        generator = Text2ThreeDPromptGenerator(metadata=metadata, seed=seed)
 
     for complexity in tqdm(complexities, desc=f"Batch {batch_idx} - Complexity"):
         for num_attributes in scene_attributes:

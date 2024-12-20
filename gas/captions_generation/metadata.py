@@ -186,20 +186,21 @@ class Text2VisionMetaData():
 		self.path_to_sg_template = path_to_sg_template
 		self.sg_template_store_dict = {}
 
-	def sample_global_attribute(self, rng, n=1):
-		assert n <= len(self.global_attributes), "n should be less than the number of global attributes"
-		global_attributes = {}
-		global_attribute_types = rng.choice(list(self.global_attributes.keys()), n, replace=False)
-		for global_attribute_type in global_attribute_types:
-			attributes = self.global_attributes[global_attribute_type]
+	def sample_scene_attribute(self, rng, n=1):
+		print(self.scene_attributes)
+		assert n <= len(self.scene_attributes), f"n should be less than the total types of scene attributes: {len(self.scene_attributes)}"
+		scene_attributes = {}
+		scene_attribute_types = rng.choice(list(self.scene_attributes.keys()), n, replace=False)
+		for scene_attribute_type in scene_attribute_types:
+			attributes = self.scene_attributes[scene_attribute_type]
 			if isinstance(attributes, list):
-				global_attributes[str(global_attribute_type)] = str(rng.choice(attributes))
+				scene_attributes[str(scene_attribute_type)] = str(rng.choice(attributes))
 			elif isinstance(attributes, dict):
-				global_attribute_sub_type = rng.choice(list(attributes.keys()))
-				global_attributes[str(global_attribute_type)] = str(rng.choice(attributes[global_attribute_sub_type]))
+				scene_attribute_sub_type = rng.choice(list(attributes.keys()))
+				scene_attributes[str(scene_attribute_type)] = str(rng.choice(attributes[scene_attribute_sub_type]))
 			else:
-				raise ValueError("Invalid global attribute type")
-		return global_attributes
+				raise ValueError("Invalid scene attribute type")
+		return scene_attributes
 
 	def sample_metadata(self, rng, element_type):
 		if element_type == "object":
@@ -237,7 +238,7 @@ class Text2VisionMetaData():
 class Text2ImageMetaData(Text2VisionMetaData):
 	def __init__(self, path_to_metadata, path_to_sg_template=None):
 		super().__init__(path_to_metadata, path_to_sg_template)
-		self.global_attributes = json.load(
+		self.scene_attributes = json.load(
 			open(os.path.join(path_to_metadata, "image_attributes.json"))
 		)
 
@@ -245,33 +246,52 @@ class Text2ImageMetaData(Text2VisionMetaData):
 class Text2VideoMetaData(Text2VisionMetaData):
 	def __init__(self, path_to_metadata, path_to_sg_template=None):
 		super().__init__(path_to_metadata, path_to_sg_template)
-		self.global_attributes = {}
-		# video can both use global attributes from image and video
-		self.global_attributes['video_unique'] = json.load(
-			open(os.path.join(path_to_metadata, "video_attributes.json"))
+		self.scene_attributes = {}
+		# video can both use scene attributes from image and video
+		self.scene_attributes['video_unique'] = json.load(
+			open(os.path.join(path_to_metadata, "video_scene_attributes.json"))
 		)
-		self.global_attributes['image_and_video'] = json.load(
-			open(os.path.join(path_to_metadata, "image_attributes.json"))
+		self.scene_attributes['image_and_video'] = json.load(
+			open(os.path.join(path_to_metadata, "image_scene_attributes.json"))
 		)
-	def sample_global_attribute(self, rng, n=1):
-		is_video_unique_attribute = str(rng.choice(list(self.global_attributes.keys())))
-		global_attributes = {}
-		global_attribute_types = rng.choice(list(self.global_attributes[is_video_unique_attribute].keys()), n, replace=False)
-		for global_attribute_type in global_attribute_types:
-			attributes = self.global_attributes[is_video_unique_attribute][global_attribute_type]
+	def sample_scene_attribute(self, rng, n=1):
+		is_video_unique_attribute = str(rng.choice(list(self.scene_attributes.keys())))
+		scene_attributes = {}
+		scene_attribute_types = rng.choice(list(self.scene_attributes[is_video_unique_attribute].keys()), n, replace=False)
+		for scene_attribute_type in scene_attribute_types:
+			attributes = self.scene_attributes[is_video_unique_attribute][scene_attribute_type]
 			if isinstance(attributes, list):
-				global_attributes[str(global_attribute_type)] = str(rng.choice(attributes))
+				scene_attributes[str(scene_attribute_type)] = str(rng.choice(attributes))
 			elif isinstance(attributes, dict):
-				global_attribute_sub_type = rng.choice(list(attributes.keys()))
-				global_attributes[str(global_attribute_type)] = str(rng.choice(attributes[global_attribute_sub_type]))
+				scene_attribute_sub_type = rng.choice(list(attributes.keys()))
+				scene_attributes[str(scene_attribute_type)] = str(rng.choice(attributes[scene_attribute_sub_type]))
 			else:
-				raise ValueError("Invalid global attribute type")
-		return global_attributes
+				raise ValueError("Invalid scene attribute type")
+		return scene_attributes
 
 
 class Text2ThreeDMetaData(Text2VisionMetaData):
 	def __init__(self, path_to_metadata, path_to_sg_template=None):
 		super().__init__(path_to_metadata, path_to_sg_template)
-		self.global_attributes = json.load(
-			open(os.path.join(path_to_metadata, "3D_attributes.json"))
+		self.scene_attributes = {}
+		# threed can both use scene attributes from image and threed
+		self.scene_attributes['threed_unique'] = json.load(
+			open(os.path.join(path_to_metadata, "threed_scene_attributes.json"))
 		)
+		self.scene_attributes['image_and_threed'] = json.load(
+			open(os.path.join(path_to_metadata, "image_scene_attributes.json"))
+		)
+	def sample_scene_attribute(self, rng, n=1):
+		is_threed_unique_attribute = str(rng.choice(list(self.scene_attributes.keys())))
+		scene_attributes = {}
+		scene_attribute_types = rng.choice(list(self.scene_attributes[is_threed_unique_attribute].keys()), n, replace=False)
+		for scene_attribute_type in scene_attribute_types:
+			attributes = self.scene_attributes[is_threed_unique_attribute][scene_attribute_type]
+			if isinstance(attributes, list):
+				scene_attributes[str(scene_attribute_type)] = str(rng.choice(attributes))
+			elif isinstance(attributes, dict):
+				scene_attribute_sub_type = rng.choice(list(attributes.keys()))
+				scene_attributes[str(scene_attribute_type)] = str(rng.choice(attributes[scene_attribute_sub_type]))
+			else:
+				raise ValueError("Invalid scene attribute type")
+		return scene_attributes
