@@ -254,34 +254,8 @@ class Text2VideoPromptGenerator(Text2VisionPromptGenerator):
 		super().__init__(metadata, seed=seed)
 
 
-class Text2ThreeDScenePromptGenerator(Text2VisionPromptGenerator):
+class Text2ThreeDPromptGenerator(Text2VisionPromptGenerator):
 	generate_type = "3D scene"
 
 	def __init__(self, metadata: Text2ThreeDMetaData, seed=42):
 		super().__init__(metadata, seed=seed)
-
-
-class Text2ThreeDObjectPromptGenerator(Text2VisionPromptGenerator):
-	generate_type = "3D object"
-
-	def __init__(self, metadata: Text2ThreeDMetaData, seed=42):
-		super().__init__(metadata, seed=seed)
-
-	def sample_task_plans(
-			self,
-			complexity=5,
-			number_of_global_attributes=1,
-			sample_numbers=100,
-			time_limit=60,
-			object_graph: nx.DiGraph = None,  # a graph which have 1 object node and its attribute nodes.
-			element_num_dict=None,
-	):
-		# for 3D objects, there is not relation in the scene graph and there is only 1 objects
-		return super().sample_task_plans(
-			complexity=complexity,
-			number_of_global_attributes=number_of_global_attributes,
-			sample_numbers=sample_numbers,
-			time_limit=time_limit,
-			seed_graph=object_graph,
-			element_num_dict={"object": 1, "attribute": None, "relation": 0},
-		)
