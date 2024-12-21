@@ -23,7 +23,7 @@ You can easily download the repo and set up the environments via:
 git clone https://github.com/JieyuZ2/TaskMeAnything.git
 cd ./TaskMeAnything
 
-pip install -r requirements.txt
+pip install -r requirements_captions_generation.txt
 ```
 After downloading the repo, you can generate captions using the following command:
 ```
@@ -31,12 +31,12 @@ python generation.py \
   --metadata_path ./metadata \
   --output_dir ./output \
   --total_prompts 1000 \
-  --num_files 1 \
+  --num_workers 1 \  # enable parallelism by setting num_workers > 1
   --min_complexity 4 \
   --max_complexity 7 \
   --min_attributes 1 \
   --max_attributes 4 \
-  --modality_type text2image
+  --modality_type text2image # or text2video or text2threed for different modalities
 ```
 
 ### For Model Inference and Evaluation

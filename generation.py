@@ -11,7 +11,7 @@ def parse_arguments():
     parser.add_argument("--metadata_path", type=str, default="./metadata", help="Path to the metadata file.")
     parser.add_argument("--output_dir", type=str, default="./", help="Directory to save the generated prompts.")
     parser.add_argument("--total_prompts", type=int, default=5, help="Total number of prompts to generate.")
-    parser.add_argument("--num_files", type=int, default=1, help="Number of output files (enables parallelism).")
+    parser.add_argument("--num_workers", type=int, default=1, help="Numbers of workers (enables parallelism).")
     parser.add_argument("--min_complexity", type=int, default=3, help="Minimum complexity of prompts.")
     parser.add_argument("--max_complexity", type=int, default=8, help="Maximum complexity of prompts.")
     parser.add_argument("--min_attributes", type=int, default=0, help="Minimum number of scene attributes.")
