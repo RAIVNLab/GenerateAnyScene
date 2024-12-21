@@ -147,6 +147,15 @@ By using **Generate Any Scene** to generate challenging synthetic data, we train
 
 ---
 
+## Metadata Structure
+metadata:
+* **attributes.json**: each key is a category of attributes, and the value is a list of attributes
+* **objects.json**: a list of objects metadata
+* **relations.json**: each key is a category of attributes, and the value is a list of attributes
+* **scene_attributes.json**: a 2 level nested dictionary, where the first level is the scene attribute category, and the second level is the subcategory, and the value is a list of corresponding scene attributes.
+* **taxonomy.json**: The taxonomy of objects, each edge is a directed edge from parent to child, indicates the first concept is the super concept of the second concept.
+
+
 ## Citation
 
 If you find **Generate Any Scene** helpful in your work, please cite:
