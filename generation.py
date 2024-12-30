@@ -60,20 +60,20 @@ def generate_batch(batch_idx, complexities, scene_attributes, prompts_per_attrib
 
 def main():
     args = parse_arguments()
-    if args.num_files > args.total_prompts:
+    if args.num_workers > args.total_prompts:
         raise ValueError("Number of files cannot exceed total prompts.")
 
     complexities = range(args.min_complexity, args.max_complexity + 1)
     scene_attributes = range(args.min_attributes, args.max_attributes + 1)
-    prompts_per_file = args.total_prompts // args.num_files
+    prompts_per_file = args.total_prompts // args.num_workers
     prompts_per_complexity = prompts_per_file // len(complexities)
     prompts_per_attribute = prompts_per_complexity // len(scene_attributes)
-    seeds = [random.randint(0, 100) for _ in range(args.num_files)]
+    seeds = [random.randint(0, 100) for _ in range(args.num_workers)]
 
-    with mp.Pool(processes=args.num_files) as pool:
+    with mp.Pool(processes=args.num_workers) as pool:
         pool.starmap(generate_batch, [
             (batch_idx, complexities, scene_attributes, prompts_per_attribute, args.metadata_path, seeds[batch_idx], args.output_dir, args.modality_type)
-            for batch_idx in range(args.num_files)
+            for batch_idx in range(args.num_workers)
         ])
 
 if __name__ == "__main__":
