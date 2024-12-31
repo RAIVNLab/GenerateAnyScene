@@ -71,7 +71,7 @@ class Text2ImageModel(GenModel):
             torch_device: str = "cuda",
             cache_path: str = None,
     ):
-        super().__init__(model_name, cache_path)
+        super().__init__(GenModel, cache_path)
         assert isinstance(torch_device, int) or torch_device in ["cpu","cuda"] or torch_device.startswith("cuda:")
         assert isinstance(metrics_device, int) or metrics_device in ["cpu","cuda"] or metrics_device.startswith("cuda:")
         if isinstance(metrics_device, str):

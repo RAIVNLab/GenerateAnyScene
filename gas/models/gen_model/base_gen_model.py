@@ -47,3 +47,12 @@ class GenModel(Model):
         output = self._gen(gen_data)
         result = {"output": output}
         return result
+
+class Metric:
+    def __init__(self, device: str = "cuda"):
+        # check if the device is cuda or cpu or a digital string
+        self.device = device
+
+    @torch.no_grad()
+    def compute(self, gen_data, image):
+        "(Abstract method) abstract compute matric method"

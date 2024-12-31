@@ -5,9 +5,14 @@ from PIL import Image
 from omegaconf import OmegaConf
 from pytorch_lightning import seed_everything
 import io, imageio
+import sys
 
 from .base_gen_model import GenModel, GenModelInstance
 from .text2video_metric import Text2VideoEvalMetric
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(current_dir, "model_zoo/VideoCrafter/scripts/evaluation"))
+sys.path.append(os.path.join(current_dir, "model_zoo/VideoCrafter"))
 
 
 text2video_models = {
@@ -72,13 +77,13 @@ class Text2VideoModel(GenModel):
         self,
         model_name: str,
         model: GenModelInstance = None,
-        metrics: list[str] = None,
+        metrics: list = None,
         metrics_device: str = "cuda",
         precision: torch.dtype = torch.float16,# None means using all the default metrics
         torch_device: str = "cuda",
         cache_path: str = None,
     ):
-        super().__init__(model_name, cache_path)
+        super().__init__(GenModel, cache_path)
 
 
         assert isinstance(torch_device, int) or torch_device in ["cpu","cuda"] or torch_device.startswith("cuda:")
@@ -121,7 +126,6 @@ class Text2VideoModel(GenModel):
         output = self._gen(gen_data)
         # release the memory
         torch.cuda.empty_cache()
-        print(type(output))
         if self.metrics == "No Metrics":
             result = {"output": output}
         else:
@@ -129,7 +133,6 @@ class Text2VideoModel(GenModel):
         return result
             
     def _data_to_str(self, data):
-        # the data here for text2image model is the prompt, so it should be a str
         if isinstance(data, str):
             return data
         else:
@@ -477,8 +480,11 @@ class VideoCraft2(GenModelInstance):
         self.input_ns.frames = 16
         self.input_ns.fps = 16
         self.input_ns.unconditional_guidance_scale = 12.0
-        seed_everything(self.input_ns.seed)            
-        self.gpu_no = 0
+        seed_everything(self.input_ns.seed)
+        if device.type == "cuda":
+            self.gpu_no = device.index
+        else:
+            self.gpu_no = -1
     
     def gen(self, prompt, **kwargs):
         args = self.input_ns
@@ -489,7 +495,8 @@ class VideoCraft2(GenModelInstance):
         config = OmegaConf.load(args.config)
         model_config = config.pop("model", OmegaConf.create())
         model = instantiate_from_config(model_config)
-        model = model.cuda(self.gpu_no)
+        if self.gpu_no >= 0:
+            model = model.cuda(self.gpu_no)
         assert os.path.exists(args.ckpt_path), f"Error: checkpoint [{args.ckpt_path}] Not Found!"
         model = load_model_checkpoint(model, args.ckpt_path)
         model.eval()

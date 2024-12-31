@@ -1,5 +1,6 @@
 import os
 from tempfile import NamedTemporaryFile
+from .base_gen_model import Metric
 
 import torch
 from PIL import Image
@@ -11,6 +12,9 @@ metrics_dict = {
     "ImageRewardScore": "ImageRewardScore",
     "ProgrammaticDSGTIFAScore": "ProgrammaticDSGTIFAScore"
 }
+
+def list_image_metrics():
+    return list(metrics_dict.keys())
 
 class Text2ImageEvalMetric():
     def __init__(
@@ -49,14 +53,6 @@ class Text2ImageEvalMetric():
         return list(metrics_dict.keys())
 
 
-class Metric:
-    def __init__(self, device: str = "cuda"):
-        # check if the device is cuda or cpu or a digital string
-        self.device = device
-
-    @torch.no_grad()
-    def compute(self, gen_data, image):
-        "(Abstract method) abstract compute matric method"
 
 
 class ClipScore(Metric):

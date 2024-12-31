@@ -133,6 +133,8 @@ class ProgressiveBandHashGrid(nn.Module, Updateable):
         encoding_config = config.copy()
         encoding_config["otype"] = "Grid"
         encoding_config["type"] = "Hash"
+        import torch
+
         with torch.cuda.device(get_rank()):
             self.encoding = tcnn.Encoding(in_channels, encoding_config, dtype=dtype)
         self.n_output_dims = self.encoding.n_output_dims

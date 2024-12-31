@@ -112,7 +112,7 @@ def main(args, extras) -> tuple:
     # Always rely on CUDA_VISIBLE_DEVICES if specific GPU ID(s) are specified.
     # As far as Pytorch Lightning is concerned, we always use all available GPUs
     # (possibly filtered by CUDA_VISIBLE_DEVICES).
-    devices = -1
+    devices = 1
     if len(env_gpus) > 0:
         # CUDA_VISIBLE_DEVICES was set already, e.g. within SLURM srun or higher-level script.
         n_gpus = len(env_gpus)
@@ -140,8 +140,7 @@ def main(args, extras) -> tuple:
              
                     n_gpus = len(selected_gpus)
                     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu.index)
-
-                
+            
 
     import pytorch_lightning as pl
     import torch

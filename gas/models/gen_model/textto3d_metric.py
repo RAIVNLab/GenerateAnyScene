@@ -2,6 +2,8 @@ import torch
 from PIL import Image
 from tempfile import NamedTemporaryFile
 import os
+from .base_gen_model import Metric
+
 
 metrics_dict = {
     "ClipScore": "ClipScore",
@@ -10,6 +12,9 @@ metrics_dict = {
     "ImageRewardScore": "ImageRewardScore",
     "ProgrammaticDSGTIFAScore": "ProgrammaticDSGTIFAScore"
 }
+
+def list_3d_metrics():
+    return list(metrics_dict.keys())
 
 class Textto3DEvalMetric():
     def __init__(
@@ -111,14 +116,6 @@ class Textto3DEvalMetric():
     
     def list_metrics(self):
         return list(metrics_dict.keys())
-
-class Metric:
-    def __init__(self, device: str = "cuda"):
-        self.device = device
-        
-    @torch.no_grad()
-    def compute(self, gen_data, video):
-        "(Abstract method) abstract compute metric method"
 
 class ClipScore(Metric):
     def __init__(self, model_name_or_path='openai:ViT-L-14-336', device="cuda"):

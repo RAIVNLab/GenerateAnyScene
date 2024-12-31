@@ -1,4 +1,5 @@
 import json
+import os
 import random
 import argparse
 import multiprocessing as mp
@@ -7,16 +8,16 @@ from gas.captions_generation.prompt_generator import Text2ImagePromptGenerator, 
 from gas.captions_generation.metadata import Text2ImageMetaData, Text2VideoMetaData, Text2ThreeDMetaData
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="Generate text-to-vision prompts using multiprocessing.")
+    parser = argparse.ArgumentParser(description="Generate text-to-vision captions using multiprocessing.")
     parser.add_argument("--metadata_path", type=str, default="./metadata", help="Path to the metadata file.")
-    parser.add_argument("--output_dir", type=str, default="./", help="Directory to save the generated prompts.")
-    parser.add_argument("--total_prompts", type=int, default=5, help="Total number of prompts to generate.")
+    parser.add_argument("--output_dir", type=str, default="./", help="Directory to save the generated captions.")
+    parser.add_argument("--total_prompts", type=int, default=5, help="Total number of captions to generate.")
     parser.add_argument("--num_workers", type=int, default=1, help="Numbers of workers (enables parallelism).")
-    parser.add_argument("--min_complexity", type=int, default=3, help="Minimum complexity of prompts.")
-    parser.add_argument("--max_complexity", type=int, default=8, help="Maximum complexity of prompts.")
+    parser.add_argument("--min_complexity", type=int, default=3, help="Minimum complexity of captions.")
+    parser.add_argument("--max_complexity", type=int, default=8, help="Maximum complexity of captions.")
     parser.add_argument("--min_attributes", type=int, default=0, help="Minimum number of scene attributes.")
     parser.add_argument("--max_attributes", type=int, default=5, help="Maximum number of scene attributes.")
-    parser.add_argument("--modality_type", type=str, default="text2image", help="Type of modality to generate prompts for.")
+    parser.add_argument("--modality_type", type=str, default="text2image", help="Type of modality to generate captions for.")
     return parser.parse_args()
 
 def create_metadata(modality_type, metadata_path):
@@ -62,7 +63,7 @@ def main():
     args = parse_arguments()
     if args.num_workers > args.total_prompts:
         raise ValueError("Number of files cannot exceed total prompts.")
-
+    os.makedirs(args.output_dir, exist_ok=True)
     complexities = range(args.min_complexity, args.max_complexity + 1)
     scene_attributes = range(args.min_attributes, args.max_attributes + 1)
     prompts_per_file = args.total_prompts // args.num_workers

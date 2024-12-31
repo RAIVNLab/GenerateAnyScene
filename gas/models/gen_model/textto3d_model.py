@@ -11,9 +11,13 @@ import io
 import imageio 
 
 import sys
+import os
+import torch
+import sys
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_dir, "t3d"))
 from launch import *
+
 
 from .base_gen_model import GenModel, GenModelInstance
 from .textto3d_metric import Textto3DEvalMetric
@@ -21,14 +25,8 @@ from .textto3d_metric import Textto3DEvalMetric
 
 # Todo: Integrate threestudio into this file
 textto3d_model = {
-    "dreamfusion-sd": (
-        "Dreamfusion_sd", 
-        "t3d/configs/dreamfusion-sd.yaml"
-    ),
-    "dreamfusion-if": (
-        "Dreamfusion_if", 
-        "t3d/configs/dreamfusion-if.yaml"
-    ),
+    "dreamfusion-sd": ("Dreamfusion_sd", "t3d/configs/dreamfusion-sd.yaml"),
+    "dreamfusion-if": ("Dreamfusion_if", "t3d/configs/dreamfusion-if.yaml"),
     "prolificdreamer": (
         "Prolificdreamer",
         [
@@ -39,29 +37,21 @@ textto3d_model = {
     ),
     "magic3d-if": (
         "Magic3D",
-        [
-            "t3d/configs/magic3d-coarse-if.yaml", 
-            "t3d/configs/magic3d-refine-sd.yaml"
-        ],
+        ["t3d/configs/magic3d-coarse-if.yaml", "t3d/configs/magic3d-refine-sd.yaml"],
     ),
     "magic3d-sd": (
         "Magic3D",
-        [
-            "t3d/configs/magic3d-coarse-sd.yaml", 
-            "t3d/configs/magic3d-refine-sd.yaml"
-        ],
+        ["t3d/configs/magic3d-coarse-sd.yaml", "t3d/configs/magic3d-refine-sd.yaml"],
     ),
-    "sjc": (
-        "SJC", 
-        "t3d/configs/sjc.yaml"
-    ),
+    "sjc": ("SJC", "t3d/configs/sjc.yaml"),
     "latentnerf": (
         "LatentNeRF",
-        [
-            "t3d/configs/latentnerf.yaml", 
-            "t3d/configs/latentnerf-refine.yaml"
-        ],
-    )
+        ["t3d/configs/latentnerf.yaml", "t3d/configs/latentnerf-refine.yaml"],
+    ),
+    "fantasia3d": (
+        "Fantasia3D",
+        ["t3d/configs/fantasia3d.yaml", "t3d/configs/fantasia3d-texture.yaml"],
+    ),
 }
 
 
@@ -77,7 +67,7 @@ class Textto3DModel(GenModel):
         self,
         model_name: str,
         model: GenModelInstance = None,
-        metrics: list[str] = None,
+        metrics: list =  None,
         metrics_device: str = "cuda",
         precision: torch.dtype = torch.float16,# None means using all the default metrics
         torch_device: str = "cuda",
@@ -85,9 +75,7 @@ class Textto3DModel(GenModel):
     ):
         super().__init__(model_name, cache_path)
 
-        
-        assert isinstance(torch_device, int) or torch_device in ["cpu","cuda"] or torch_device.startswith("cuda:")
-        assert isinstance(metrics_device, int) or metrics_device in ["cpu","cuda"] or metrics_device.startswith("cuda:")
+
         if isinstance(metrics_device, str):
             metrics_device = torch.device(metrics_device)
         else:
@@ -97,6 +85,7 @@ class Textto3DModel(GenModel):
                 )
             else:
                 metrics_device = torch.device(f"cuda:{metrics_device}")
+
         if isinstance(torch_device, str):
             torch_device = torch.device(torch_device)
         else:
@@ -107,20 +96,22 @@ class Textto3DModel(GenModel):
             else:
                 torch_device = torch.device(f"cuda:{torch_device}")
         if metrics is not None:
-            self.metrics = Textto3DEvalMetric(selected_matrics=metrics, device=metrics_device)
+            self.metrics = Textto3DEvalMetric(selected_metrics=metrics, device=metrics_device)
         else: 
             self.metrics = "No Metrics"
+        
         if model is None:
             print(f"Loading {model_name} ...")
             class_name, ckpt = textto3d_model[model_name]
-            self.model_presision = precision
+            self.model_presision = precision  
+            
             self.model = eval(class_name)(ckpt, precision, torch_device)
             print(f"Finish loading {model_name}")
         else:
             print("Using provided model...")
             self.model = model
             
-    @torch.no_grad()
+    # @torch.no_grad()
     def gen(self, prompt):
         output = self._gen(prompt)
         if self.metrics == "No Metrics":
@@ -143,7 +134,8 @@ class Dreamfusion_sd(GenModelInstance):
     def gen(self, prompt):
         import argparse
         input_ns = argparse.Namespace(**{})
-        input_ns.config = self.config_f
+        # input_ns.config = self.config_f
+        input_ns.config = os.path.join(current_dir, self.config_f)
         input_ns.gpu = self.device
         input_ns.train = True
         input_ns.validate = False
@@ -173,7 +165,8 @@ class Dreamfusion_if(GenModelInstance):
     def gen(self, prompt):
         import argparse
         input_ns = argparse.Namespace(**{})
-        input_ns.config = self.config_f
+        # input_ns.config = self.config_f
+        input_ns.config = os.path.join(current_dir, self.config_f)
         input_ns.gpu = self.device
         input_ns.train = True
         input_ns.validate = False
@@ -206,7 +199,8 @@ class Prolificdreamer(GenModelInstance):
     def gen(self, prompt):
         import argparse
         input_ns = argparse.Namespace(**{})
-        input_ns.config = self.config_f[0]
+        # input_ns.config = self.config_f[0]
+        input_ns.config = os.path.join(current_dir, self.config_f[0])
         input_ns.gpu =self.device
         input_ns.train = True
         input_ns.validate = False
@@ -220,14 +214,14 @@ class Prolificdreamer(GenModelInstance):
             
         result = main(input_ns, extras)
         if self.geometry_refine:
-            input_ns.config = self.config_f[1]
+            input_ns.config = os.path.join(current_dir, self.config_f[1])
             extras.append(f"system.geometry_convert_from={result[1]}")
             # system.geometry_convert_override.isosurface_threshold=some_value 0-20.
             # extras.append(f"system.geometry_convert_override.isosurface_threshold={20.0}")
             result = main(input_ns, extras)
             
             if self.texturing:
-                input_ns.config = self.config_f[2]
+                input_ns.config = os.path.join(current_dir, self.config_f[2])
                 extras.pop()
                 extras.append(f"system.geometry_convert_from={result[1]}")
                 result = main(input_ns, extras)
@@ -279,7 +273,7 @@ class Magic3D(GenModelInstance):
     def gen(self, prompt):
         import argparse
         input_ns = argparse.Namespace(**{})
-        input_ns.config = self.config_f[0]
+        input_ns.config = os.path.join(current_dir, self.config_f[0])
         input_ns.gpu =self.device
         input_ns.train = True
         input_ns.validate = False
@@ -292,7 +286,7 @@ class Magic3D(GenModelInstance):
         
         result = main(input_ns, extras)
         if self.refine:
-            input_ns.config = self.config_f[1]
+            input_ns.config = os.path.join(current_dir, self.config_f[1])
             extras.append(f"system.geometry_convert_from={result[1]}")
             # system.geometry_convert_override.isosurface_threshold=some_value 0-20.
             # extras.append(f"system.geometry_convert_override.isosurface_threshold={20.0}")
@@ -329,7 +323,7 @@ class SJC(GenModelInstance):
     def gen(self, prompt):
         import argparse
         input_ns = argparse.Namespace(**{})
-        input_ns.config = self.config_f
+        input_ns.config = os.path.join(current_dir, self.config_f)
         input_ns.gpu =self.device
         input_ns.train = True
         input_ns.validate = False
@@ -363,7 +357,7 @@ class LatentNeRF(GenModelInstance):
     def gen(self, prompt):
         import argparse
         input_ns = argparse.Namespace(**{})
-        input_ns.config = self.config_f[0]
+        input_ns.config = os.path.join(current_dir, self.config_f[0])
         input_ns.gpu =self.device
         input_ns.train = True
         input_ns.validate = False
@@ -377,7 +371,7 @@ class LatentNeRF(GenModelInstance):
             
         result = main(input_ns, extras)
         if self.refine:
-            input_ns.config = self.config_f[1]
+            input_ns.config = os.path.join(current_dir, self.config_f[1])
             extras.append(f"system.weights={result[1]}")
             # system.geometry_convert_override.isosurface_threshold=some_value 0-20.
             # extras.append(f"system.geometry_convert_override.isosurface_threshold={20.0}")
@@ -407,4 +401,53 @@ class LatentNeRF(GenModelInstance):
                 video_data = video_bytes.read()
             return video_data
             
+    
+class Fantasia3D(GenModelInstance):
+    def __init__(self, ckpt: list = ["t3d/configs/fantasia3d.yaml", "t3d/configs/fantasia3d-texture.yaml"], precision: torch.dtype = torch.float16, device: torch.device = torch.device("cuda"), texture = False):
+        self.config_f = ckpt
+        self.device = device
+        self.texture = texture
+    def gen(self, prompt):
+        import argparse
+        input_ns = argparse.Namespace(**{})
+        input_ns.config = os.path.join(current_dir, self.config_f[0])
+        input_ns.gpu =self.device
+        input_ns.train = True
+        input_ns.validate = False
+        input_ns.test = False
+        input_ns.export = False
+        input_ns.gradio = False
+        input_ns.typecheck = False
+        input_ns.verbose = False 
+        extras = [f'system.prompt_processor.prompt={prompt}']
+            
+        result = main(input_ns, extras)
+        if self.texture:
+            input_ns.config = os.path.join(current_dir, self.config_f[1])
+            extras.append(f"system.geometry_convert_from={result[1]}")
+            img_list = main(input_ns, extras)[0]
+            with io.BytesIO() as video_bytes:
+                # Use imageio to write frames to a video
+                writer = imageio.get_writer(video_bytes, format='mp4', fps=30)
+                
+                for frame in img_list:
+                    writer.append_data(frame)
+                
+                writer.close()
+                video_bytes.seek(0)
+                video_data = video_bytes.read()
+            return video_data
+        else:
+            img_list = result[0]
+            with io.BytesIO() as video_bytes:
+                # Use imageio to write frames to a video
+                writer = imageio.get_writer(video_bytes, format='mp4', fps=30)
+                
+                for frame in img_list:
+                    writer.append_data(frame)
+                
+                writer.close()
+                video_bytes.seek(0)
+                video_data = video_bytes.read()
+            return video_data
     

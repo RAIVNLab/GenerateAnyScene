@@ -3,6 +3,7 @@ import math
 import os
 import re
 
+import torch
 import tinycudann as tcnn
 import torch
 from packaging import version
