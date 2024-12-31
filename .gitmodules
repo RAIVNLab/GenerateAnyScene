@@ -1,4 +1,4 @@
 [submodule "gas/models/gen_model/model_zoo/Open-Sora"]
-    path = gas/models/gen_model/model_zoo/Open-Sora
-    url = https://github.com/hpcaitech/Open-Sora
+	path = gas/models/gen_model/model_zoo/Open-Sora
+	url = https://github.com/hpcaitech/Open-Sora
 
