@@ -117,7 +117,7 @@ python demo.py --input_file <path_to_json_file> --gen_type <generation_type> [--
 ### **Examples**
 Generate images using default models and metrics:
 ```bash
-python demo.py --input_file captions.json --gen_type image
+python demo.py --input_file output/prompts_batch_0.json --gen_type image
 ```
 Generate images using specific models and metrics:
 ```bash
