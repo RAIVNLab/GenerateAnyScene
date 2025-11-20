@@ -1,4 +1,4 @@
-<h1 align="center"> Generate Any Scene: Evaluating and Improving Text-to-Vision Generation with Scene Graph Programming</h2>
+<h1 align="center"> Generate Any Scene: Scene Graph Driven Data Synthesis for Visual Generation Training</h2>
 
 
 <h2 align="center"> <a href="https://generate-any-scene.github.io/">🌐 Website</a> | <a href="https://arxiv.org/abs/2412.08221">📑 Paper</a> | <a href="https://huggingface.co/datasets/UWGZQ/GenerateAnyScene">🤗 Caption Dataset</a>
@@ -250,4 +250,5 @@ If you find **Generate Any Scene** helpful in your work, please cite:
       archivePrefix={arXiv},
       primaryClass={cs.CV},
       url={https://arxiv.org/abs/2412.08221}, 
+
 }
