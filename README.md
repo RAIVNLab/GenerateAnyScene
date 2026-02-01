@@ -1,4 +1,4 @@
-<h1 align="center"> Generate Any Scene: Scene Graph Driven Data Synthesis for Visual Generation Training</h2>
+<h1 align="center"> [ICLR 2026] Generate Any Scene: Scene Graph Driven Data Synthesis for Visual Generation Training</h2>
 
 
 <h2 align="center"> <a href="https://generate-any-scene.github.io/">🌐 Website</a> | <a href="https://arxiv.org/abs/2412.08221">📑 Paper</a> | <a href="https://huggingface.co/datasets/UWGZQ/GenerateAnyScene">🤗 Caption Dataset</a>
@@ -242,13 +242,13 @@ metadata:
 If you find **Generate Any Scene** helpful in your work, please cite:
 
 ```bibtex
-@misc{gao2024generatesceneevaluatingimproving,
-      title={Generate Any Scene: Evaluating and Improving Text-to-Vision Generation with Scene Graph Programming}, 
+@misc{gao2025generatescenescenegraph,
+      title={Generate Any Scene: Scene Graph Driven Data Synthesis for Visual Generation Training}, 
       author={Ziqi Gao and Weikai Huang and Jieyu Zhang and Aniruddha Kembhavi and Ranjay Krishna},
-      year={2024},
+      year={2025},
       eprint={2412.08221},
       archivePrefix={arXiv},
       primaryClass={cs.CV},
       url={https://arxiv.org/abs/2412.08221}, 
-
 }
+
