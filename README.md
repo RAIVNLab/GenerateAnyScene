@@ -1,10 +1,10 @@
 <h1 align="center"> [ICLR 2026] Generate Any Scene: Scene Graph Driven Data Synthesis for Visual Generation Training</h2>
 
 
-<h2 align="center"> <a href="https://generate-any-scene.github.io/">🌐 Website</a> | <a href="https://arxiv.org/abs/2412.08221">📑 Paper</a> | <a href="https://huggingface.co/datasets/UWGZQ/GenerateAnyScene">🤗 Caption Dataset</a>
+<h2 align="center"> <a href="https://uwgzq.github.io/papers/GAS/">🌐 Website</a> | <a href="https://arxiv.org/abs/2412.08221">📑 Paper</a> | <a href="https://huggingface.co/datasets/UWGZQ/GenerateAnyScene">🤗 Caption Dataset</a>
 
 
-**Generate Any Scene** is a framework designed to systematically evaluate and improve text-to-vision models by generating a vast array of synthetic captions derived from dynamically constructed scene graphs. These scene graphs can represent almost any kind of scene, from realistic to imaginative compositions.
+We introduce **Generate Any Scene**, a data engine that systematically enumerates scene graphs representing the combinatorial array of possible visual scenes. **Generate Any Scene** dynamically constructs scene graphs of varying complexity from a structured taxonomy of objects, attributes, and relations. Given a sampled scene graph, Generate Any Scene translates it into a caption for text-to-image or text-to-video generation; it also translates it into a set of visual question answers that allow automatic evaluation and reward modeling of semantic alignment.
 
 <!-- --- -->
 
@@ -60,7 +60,7 @@ python generation.py \
 ```
 
 ## Generation and Evaluation
-We currently support a wide range of models and metrics, including:
+We also support a wide range of models evaluation and metrics, including:
 1. **Text-to-Image Models**
 - Stable Diffusion 3 Medium
 - Stable Diffusion 2-1  
@@ -126,19 +126,14 @@ python demo.py --input_file output/prompts_batch_0.json --gen_type image --model
 
 ## What is Generate Any Scene
 
-Generative models have shown remarkable capabilities in producing images, videos, and 3D assets from textual descriptions. However, current benchmarks predominantly focus on real-world images paired with captions. To address this limitation, we introduce **Generate Any Scene**, a novel framework that:
+Modern text-to-vision models produce high-fidelity visuals but struggle with compositional generalization and semantic alignment. Existing real-world datasets (like CC3M) are noisy, weakly compositional, and lack dense, high-quality annotations.
 
-- Systematically enumerates **scene graphs** using a structured taxonomy of visual elements—encompassing objects, attributes, and relations—to produce almost infinite varieties of scenes.
-- Leverages **Scene Graph Programming**, a method to dynamically construct scene graphs and translate them into coherent captions.
-- Provides a means to scale evaluation of text-to-vision models beyond standard benchmarks, enabling evaluation on both realistic and highly imaginative scenarios.
+Constructing a compositional dataset requires that we first define the space of the visual content. Scene graphs are one such representation of the visual space, grounded in cognitive science.
+A scene graph represents objects in a scene as individual nodes in a graph. Each object is modified by attributes, which describe its properties. Relationships are edges that connect the nodes.
+Scene graphs provide explicit compositional structure.
 
-Our evaluations on various text-to-image, text-to-video, and text-to-3D models provide key insights into model capabilities and limitations. For instance, we find that text-to-image models with DiT backbones better align with captions compared to those with UNet backbones. Text-to-video models struggle with balancing visual dynamics and consistency, while text-to-3D models show significant gaps in aligning with human preferences.
 
-We further demonstrate the practical utility of **Generate Any Scene** with three applications:
-
-1. **Self-Improvement Framework**: Iteratively improving a model using its own generations guided by generated captions.
-2. **Distillation Process**: Transferring specific strengths from proprietary models to open-source counterparts.
-3. **Content Moderation Enhancement**: Identifying and generating challenging synthetic data to improve content moderation models.
+We propose Generate Any Scene (GAS), a controllable scene-graph-driven data engine that produces synthetic captions and QA for training, evaluation, reward modeling, and robustness improvement in text-to-vision systems. GAS systematically enumerates scene graphs representing the combinatorial array of possible visual scenes. 
 
 ---
 
@@ -155,10 +150,12 @@ We further demonstrate the practical utility of **Generate Any Scene** with thre
 
 **Caption Generation Process:**
 
-1. **Scene Graph Structure**: Enumerate graph structures that include nodes (objects), attributes, and relations.
-2. **Populating Metadata**: Assign specific content to each node from the metadata pool.
-3. **Scene Attributes**: Sample contextual details such as art style or camera settings.
-4. **Caption Formation**: Combine the scene graph and scene attributes into a coherent text description.
+Pipeline: 
+1. Enumerate diverse scene graph structures under user-defined constraints.
+2. Populate structures with sampled objects, attributes, and relations. 
+3. Sample scene attributes such as style, perspective, or time span. 
+4. Translate scene graph and attributes into coherent captions. 
+5. Automatically generate QA pairs covering all elements for evaluation and reward modeling.
 
 <p align="center">
   <img src="./assets/images/arch.png" alt="Generate Any Scene Pipeline" width="600">
@@ -166,43 +163,11 @@ We further demonstrate the practical utility of **Generate Any Scene** with thre
 
 ---
 
-## Overall Results
-
-### Text-to-Image
-
-<p align="center">
-  <img src="./assets/images/image_overall.png" alt="Text-to-Image Results" width="500">
-</p>
-*Comparative evaluation of text-to-image models using TiFA-Score, Pick-Score, VQA-Score, and Image-Reward-Score on 10K **Generate Any Scene** captions.*
-
-### Text-to-Video
-
-<p align="center">
-  <img src="./assets/images/video_overall.png" alt="Text-to-Video Results Overview" width="500">
-</p>
-*Overall performance of text-to-video models on 10K **Generate Any Scene** captions.*
-  
-<p align="center">
-  <img src="./assets/images/video_vbench.png" alt="VBench Metrics on Text-to-Video" width="500">
-</p>
-*Performance of text-to-video models on VBench metrics.*
-
-### Text-to-3D
-
-<p align="center">
-  <img src="./assets/images/3d_overall.png" alt="Text-to-3D Results" width="500">
-</p>
-*Performance of text-to-3D models on 10K **Generate Any Scene** captions using VBench metrics.*
-
----
 
 ## Applications
 
-<p align="center">
-  <img src="./assets/images/app.png" alt="Applications Overview" width="600">
-</p>
 
-### Application 1: Self-Improving
+### Application 1: Self-Improving models with synthetic captions
 
 <p align="center">
   <img src="./assets/images/app1.png" alt="Self-Improving Application" width="600">
@@ -210,7 +175,7 @@ We further demonstrate the practical utility of **Generate Any Scene** with thre
 
 We iteratively improve models by leveraging **Generate Any Scene** captions. Given a model's generated images, we select the best generations and fine-tune the model on them, leading to performance boosts. Stable Diffusion v1.5 gains around 5% performance improvements, outperforming even fine-tuning on real CC3M captions.
 
-### Application 2: Distilling Limitations
+### Application 2: Distilling Targeted Capabilities
 
 <p align="center">
   <img src="./assets/images/app2.png" alt="Distilling Strengths from Proprietary Models" width="600">
@@ -218,7 +183,28 @@ We iteratively improve models by leveraging **Generate Any Scene** captions. Giv
 
 We identify and distill the specific strengths of proprietary models into open-source counterparts. For example, DALL·E 3's compositional prowess is transferred to Stable Diffusion v1.5, effectively closing the performance gap in handling complex multi-object scenes.
 
-### Application 3: Improving Content Moderation
+<p align="center">
+  <img src="./assets/images/app2-1.png" alt="Distilling improvements" width="600">
+</p>
+
+Fine-tuning Stable Diffusion v1.5 with fewer than 800 GAS-targeted synthetic captions yields about a 10% TIFA improvement on these capabilities.
+
+### Application 3: RL with a Synthetic Reward Function
+
+
+<p align="center">
+  <img src="./assets/images/app3.png" alt="Examples of GRPO" width="600">
+</p>
+
+<p align="center">
+  <img src="./assets/images/app3-1.png" alt="Result of GRPO" width="600">
+</p>
+
+GAS generates exhaustive scene-graph-based QA, enabling a naturally verifiable reward signal for autoregressive text-to-image models. Instead of using only CLIP-style similarity rewards, the paper creates exhaustive QA from scene graphs and uses answer accuracy as a semantic reward. With GRPO on SimpleAR-0.5B-SFT, this scene-graph-based reward surpasses CLIP-based methods.
+
+
+
+### Application 4: Generated-Content Detection
 
 <p align="center">
   <img src="./assets/images/app3.png" alt="Content Moderation Improvement" width="600">
@@ -226,14 +212,16 @@ We identify and distill the specific strengths of proprietary models into open-s
 
 By using **Generate Any Scene** to generate challenging synthetic data, we train content moderators to better detect generated imagery. This robustifies detectors across different models and datasets, improving the reliability and safety of generative AI.
 
+
+
 ---
 
 ## Metadata Structure
 metadata:
-* **attributes.json**: each key is a category of attributes, and the value is a list of attributes
-* **objects.json**: a list of objects metadata
+* **attributes.json**: Each key is a category of attributes, and the value is a list of attributes
+* **objects.json**: A list of objects metadata
 * **relations.json**: each key is a category of attributes, and the value is a list of attributes
-* **scene_attributes.json**: a 2 level nested dictionary, where the first level is the scene attribute category, and the second level is the subcategory, and the value is a list of corresponding scene attributes.
+* **scene_attributes.json**: A 2-level nested dictionary, where the first level is the scene attribute category, and the second level is the subcategory, and the value is a list of corresponding scene attributes.
 * **taxonomy.json**: The taxonomy of objects, each edge is a directed edge from parent to child, indicates the first concept is the super concept of the second concept.
 
 
@@ -242,13 +230,10 @@ metadata:
 If you find **Generate Any Scene** helpful in your work, please cite:
 
 ```bibtex
-@misc{gao2025generatescenescenegraph,
-      title={Generate Any Scene: Scene Graph Driven Data Synthesis for Visual Generation Training}, 
-      author={Ziqi Gao and Weikai Huang and Jieyu Zhang and Aniruddha Kembhavi and Ranjay Krishna},
-      year={2025},
-      eprint={2412.08221},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2412.08221}, 
+@inproceedings{gao2026generate,
+  title={Generate Any Scene: Scene Graph Driven Data Synthesis for Visual Generation Training},
+  author={Ziqi Gao and Weikai Huang and Jieyu Zhang and Aniruddha Kembhavi and Ranjay Krishna},
+  booktitle={The Fourteenth International Conference on Learning Representations},
+  year={2026}
 }
 
